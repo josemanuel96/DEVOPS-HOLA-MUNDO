@@ -1,0 +1,33 @@
+name: CI/CD Docker Hub + Render
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar código del repositorio
+        uses: actions/checkout@v4
+
+      - name: Iniciar sesión en Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Construir y subir imagen a Docker Hub
+        uses: docker/build-push-action@v6
+        with:
+          context: ./HolaMundoDocker
+          file: ./HolaMundoDocker/Dockerfile
+          push: true
+          tags: josevicente96/holamundodocker:latest
+
+      - name: Disparar deploy en Render
+        run: curl "$RENDER_DEPLOY_HOOK_URL"
+        env:
+          RENDER_DEPLOY_HOOK_URL: ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
